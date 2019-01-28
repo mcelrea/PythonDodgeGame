@@ -11,6 +11,8 @@ screen = pygame.display.set_mode((800, 600))
 
 #variable to control the game loop, keeps our code running until we flip it to True
 done = False
+gameStatus = "playing"
+finalScore = 0
 
 #player variables
 x = 400
@@ -37,12 +39,20 @@ def handlePlayerInput():
     pressed = pygame.key.get_pressed()
     if pressed[pygame.K_d]:
         x += speed
+        if x > 785:
+            x = 785
     if pressed[pygame.K_a]:
         x -= speed
+        if x < 0:
+            x = 0
     if pressed[pygame.K_w]:
         y -= speed
+        if y < 0:
+            y = 0
     if pressed[pygame.K_s]:
         y += speed
+        if y > 585:
+            y = 585
 
 def draw():
     #clear screen
@@ -119,18 +129,41 @@ def checkCollisions():
     global downEnemies
     global rightEnemies
     global leftEnemies
+    global gameStatus
+    global finalScore
     for enemy in downEnemies:
         if enemy.colliderect(pygame.Rect(x,y,size,size)):
-            resetGame()
+            gameStatus = "gameover"
+            finalScore = pygame.time.get_ticks() - lastRestartTime
     for enemy in upEnemies:
         if enemy.colliderect(pygame.Rect(x,y,size,size)):
-            resetGame()
+            gameStatus = "gameover"
+            finalScore = pygame.time.get_ticks() - lastRestartTime
     for enemy in leftEnemies:
         if enemy.colliderect(pygame.Rect(x,y,size,size)):
-            resetGame()
+            gameStatus = "gameover"
+            finalScore = pygame.time.get_ticks() - lastRestartTime
     for enemy in rightEnemies:
         if enemy.colliderect(pygame.Rect(x,y,size,size)):
-            resetGame()
+            gameStatus = "gameover"
+            finalScore = pygame.time.get_ticks() - lastRestartTime
+
+def drawGameOver():
+    # clear screen
+    pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(0, 0, 800, 600), 0)
+
+    # draw the game over
+    textSurface = myFont.render("Game Over", False, (255, 255, 255))
+    screen.blit(textSurface, (367, 10))
+
+    # draw the final score
+    textSurface = myFont.render("Final Score: " + str(finalScore), False, (255, 255, 255))
+    screen.blit(textSurface, (367, 200))
+
+    # draw continue code
+    textSurface = myFont.render("Press Spacebar to play again", False, (255, 255, 255))
+    screen.blit(textSurface, (367, 400))
+
 
 def moveEnemies():
     for enemy in downEnemies:
@@ -176,11 +209,20 @@ while not done:
         #if the event is a click on the "X" close button
         if event.type == pygame.QUIT:
             done = True
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                if gameStatus == "gameover":
+                    resetGame()
+                    gameStatus = "playing"
 
-    handlePlayerInput()
-    moveEnemies()
-    checkCollisions()
-    draw()
+
+    if gameStatus == "playing":
+        handlePlayerInput()
+        moveEnemies()
+        checkCollisions()
+        draw()
+    elif gameStatus == "gameover":
+        drawGameOver()
 
     #Show any graphical updates you have made to the screen
     pygame.display.flip()
